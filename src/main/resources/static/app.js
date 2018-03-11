@@ -36,37 +36,43 @@ var app = (function () {
         //subscribe to /topic/TOPICXX when connections succeed
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/newpoint.'+ lobby, function (eventbody) {        
+            stompClient.subscribe('/topic/newpoint.'+ lobby, function (eventbody) {  
                 var theObject = JSON.parse(eventbody.body);  
                 console.info("Lobby: " + lobby);
-                alert(eventbody);
+                //alert(eventbody);
+                //La función addPointToCavas crea circulos de radio 1.5 y en el enunciado pedia radio 1 
                 var c = document.getElementById("canvas");
                 var ctx = c.getContext("2d");
                 ctx.beginPath();
                 ctx.arc(theObject.x,theObject.y,2,0,2*Math.PI);
                 ctx.stroke();
             });
-            stompClient.subscribe('/topic/newplot', function (xy) {   
-                var position = JSON.parse(xy.body);
+            stompClient.subscribe('/topic/newpolygon.'+lobby, function (points) {   
+                var polygonJS = JSON.parse(points.body);
+                var c = document.getElementById("canvas");
+                var ctx = c.getContext("2d");
+                ctx.fillStyle = '#26C8ED';
+                ctx.beginPath();
+                ctx.moveTo(polygonJS[0].x, polygonJS[0].y);
+                for (i = 1; i < polygonJS.length; i++) {
+                    ctx.lineTo(polygonJS[i].x, polygonJS[i].y);
+                }
+                ctx.closePath();
+                ctx.stroke();
                 
             });
             
         });
 
     };
-    
-    var tryConnect = function(){
-        
-    };
-    
-
+   
     return {
 
         init: function () {
             var can = document.getElementById("canvas");     
             can.addEventListener('click', function(event){
                var lb = document.getElementById("lobby").value;
-               stompClient.send("/topic/newpoint."+lb, {}, JSON.stringify(new Point(getMousePosition(event).x,getMousePosition(event).y)));
+               stompClient.send("/app/newpoint."+lb, {}, JSON.stringify(new Point(getMousePosition(event).x,getMousePosition(event).y)));
                //app.publishPoint(getMousePosition(event).x,getMousePosition(event).y);
             });
             
