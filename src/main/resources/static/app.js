@@ -36,12 +36,20 @@ var app = (function () {
         //subscribe to /topic/TOPICXX when connections succeed
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/newpoint', function (eventbody) {
-                
-                var theObject = JSON.parse(eventbody.body);
-                addPointToCanvas(theObject);
-                alert(eventbody.body);
+            stompClient.subscribe('/topic/newpoint', function (eventbody) {        
+                var theObject = JSON.parse(eventbody.body);              
+                //alert(theObject);
+                var c = document.getElementById("canvas");
+                var ctx = c.getContext("2d");
+                ctx.beginPath();
+                ctx.arc(theObject.x,theObject.y,2,0,2*Math.PI);
+                ctx.stroke();
             });
+            stompClient.subscribe('/topic/newplot', function (xy) {   
+                var position = JSON.parse(xy.body);
+                
+            });
+            
         });
 
     };
@@ -53,11 +61,8 @@ var app = (function () {
         init: function () {
             var can = document.getElementById("canvas");
             can.addEventListener('click', function(event){
-         
-               
-            
-               stompClient.send("/app/newpoint", {}, JSON.stringify(new Point(getMousePosition(event).x,getMousePosition(event).y)));
-                
+               stompClient.send("/topic/newpoint", {}, JSON.stringify(new Point(getMousePosition(event).x,getMousePosition(event).y)));
+               //app.publishPoint(getMousePosition(event).x,getMousePosition(event).y);
             });
             
             //websocket connection
@@ -68,7 +73,7 @@ var app = (function () {
             var pt=new Point(px,py);
             console.info("publishing point at "+pt);
             
-                    
+            //addPointToCanvas(pt);        
             //publicar el evento
             stompClient.send("/topic/newpoint", {}, JSON.stringify(pt)); 
             
